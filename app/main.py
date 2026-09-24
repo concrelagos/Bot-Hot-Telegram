@@ -81,6 +81,12 @@ async def telegram_webhook(request: Request):
         "X-Telegram-Bot-API-Secret-Token"
     )
 
+    print(
+        f"=== TELEGRAM WEBHOOK RECEBIDO | "
+        f"SECRET PRESENTE: {bool(secret)} ===",
+        flush=True,
+    )
+
     if settings.telegram_webhook_secret:
         if secret != settings.telegram_webhook_secret:
             print(
