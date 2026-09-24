@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from app.database.seed import seed_content
 
 from fastapi import FastAPI, Request
 
@@ -14,6 +15,8 @@ TELEGRAM_WEBHOOK_PATH = "/webhooks/telegram"
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+
+    await seed_content()
 
     webhook_url = (
         "https://bot-hot-telegram.onrender.com"
@@ -56,7 +59,6 @@ async def lifespan(app: FastAPI):
     )
 
     await bot.session.close()
-
 
 app = FastAPI(
     title="Bot Hot Telegram",
