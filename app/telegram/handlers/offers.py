@@ -105,6 +105,8 @@ async def select_offer(callback: CallbackQuery) -> None:
         session.add(order)
         await session.commit()
         await session.refresh(order)
+        
+        print("=== INICIANDO GERACAO DO PIX ===", flush=True)
 
         try:
             transaction = await create_pix(
