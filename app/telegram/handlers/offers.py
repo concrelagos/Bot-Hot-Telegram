@@ -113,7 +113,7 @@ async def select_offer(callback: CallbackQuery) -> None:
                 external_id=external_id,
             )
 
-               except Exception as exc:
+        except Exception as exc:
             print(f"ERRO AO GERAR PIX: {exc!r}")
 
             order.status = "CANCELLED"
