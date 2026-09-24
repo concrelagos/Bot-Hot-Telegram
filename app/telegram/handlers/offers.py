@@ -113,24 +113,25 @@ async def select_offer(callback: CallbackQuery) -> None:
                 external_id=external_id,
             )
 
-        except Exception as exc:
-            print(f"ERRO AO GERAR PIX: {exc!r}")
+except Exception as exc:
+    print(f"ERRO AO GERAR PIX: {exc!r}", flush=True)
 
-            order.status = "CANCELLED"
-            await session.commit()
+    order.status = "CANCELLED"
+    await session.commit()
 
-            await callback.answer(
-                "Não foi possível gerar o PIX.",
-                show_alert=True,
-            )
+    erro = str(exc)
 
-            await callback.message.answer(
-                "❌ Não consegui gerar seu pagamento agora.\n\n"
-                "Tente novamente em alguns instantes."
-            )
+    await callback.answer(
+        "Não foi possível gerar o PIX.",
+        show_alert=True,
+    )
 
-            return
+    await callback.message.answer(
+        "❌ Erro ao gerar o PIX.\n\n"
+        f"🔎 Detalhe técnico:\n{erro[:3500]}"
+    )
 
+    return
         # Dados retornados pela ePague
         order.payment_id = transaction.get("id")
         order.payment_txid = transaction.get("txid")
