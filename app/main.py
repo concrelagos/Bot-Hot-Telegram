@@ -59,6 +59,11 @@ async def telegram_webhook(request: Request):
 
     data = await request.json()
 
+    print(
+        f"=== UPDATE TELEGRAM RECEBIDO: {data} ===",
+        flush=True,
+    )
+
     from aiogram.types import Update
 
     update = Update.model_validate(
