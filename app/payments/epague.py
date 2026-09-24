@@ -26,21 +26,95 @@ async def create_pix(
     headers = {
         "x-api-key": settings.epague_api_key,
         "Content-Type": "application/json",
+        "Accept": "application/json",
     }
 
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        response = await client.post(
-            f"{EPAGUE_BASE_URL}/api/pix/create",
-            headers=headers,
-            json=payload,
+    print("=== EPAGUE: INICIANDO CREATE PIX ===", flush=True)
+    print(
+        f"=== EPAGUE: amount={amount} external_id={external_id} ===",
+        flush=True,
+    )
+    print(
+        f"=== EPAGUE: webhook_url={settings.epague_webhook_url} ===",
+        flush=True,
+    )
+    print(
+        f"=== EPAGUE: shop_id={'CONFIGURADO' if settings.epague_shop_id else 'NAO CONFIGURADO'} ===",
+        flush=True,
+    )
+
+    try:
+        async with httpx.AsyncClient(
+            timeout=httpx.Timeout(
+                connect=10.0,
+                read=30.0,
+                write=10.0,
+                pool=10.0,
+            )
+        ) as client:
+            response = await client.post(
+                f"{EPAGUE_BASE_URL}/api/pix/create",
+                headers=headers,
+                json=payload,
+            )
+
+    except httpx.TimeoutException as exc:
+        print(
+            f"=== EPAGUE: TIMEOUT === {exc!r}",
+            flush=True,
         )
+        raise RuntimeError(
+            "A ePague demorou demais para responder."
+        ) from exc
+
+    except httpx.RequestError as exc:
+        print(
+            f"=== EPAGUE: ERRO DE CONEXAO === {exc!r}",
+            flush=True,
+        )
+        raise RuntimeError(
+            f"Não foi possível conectar à ePague: {exc}"
+        ) from exc
+
+    print(
+        f"=== EPAGUE: STATUS HTTP {response.status_code} ===",
+        flush=True,
+    )
+
+    print(
+        f"=== EPAGUE: CONTENT-TYPE {response.headers.get('content-type')} ===",
+        flush=True,
+    )
+
+    print(
+        f"=== EPAGUE: SERVER {response.headers.get('server')} ===",
+        flush=True,
+    )
 
     if response.is_error:
-        raise RuntimeError(
-            f"ePague HTTP {response.status_code}: {response.text}"
+        body = response.text[:5000]
+
+        print(
+            f"=== EPAGUE: RESPOSTA DE ERRO ===\n{body}",
+            flush=True,
         )
 
-    data = response.json()
+        raise RuntimeError(
+            f"ePague HTTP {response.status_code}: {body}"
+        )
+
+    try:
+        data = response.json()
+    except ValueError as exc:
+        raise RuntimeError(
+            f"ePague retornou resposta que não é JSON: "
+            f"{response.text[:2000]}"
+        ) from exc
+
+    print(
+        f"=== EPAGUE: JSON RECEBIDO === {data}",
+        flush=True,
+    )
 
     if not data.get("success"):
         raise RuntimeError(
