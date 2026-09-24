@@ -20,15 +20,41 @@ async def lifespan(app: FastAPI):
         f"{TELEGRAM_WEBHOOK_PATH}"
     )
 
+    print(
+        f"=== CONFIGURANDO WEBHOOK TELEGRAM: {webhook_url} ===",
+        flush=True,
+    )
+
     await bot.set_webhook(
         url=webhook_url,
         secret_token=settings.telegram_webhook_secret,
-        drop_pending_updates=True,
+        drop_pending_updates=False,
+    )
+
+    webhook_info = await bot.get_webhook_info()
+
+    print(
+        f"=== WEBHOOK ATUAL: {webhook_info.url} ===",
+        flush=True,
+    )
+
+    print(
+        f"=== UPDATES PENDENTES: {webhook_info.pending_update_count} ===",
+        flush=True,
+    )
+
+    print(
+        f"=== ULTIMO ERRO TELEGRAM: {webhook_info.last_error_message} ===",
+        flush=True,
     )
 
     yield
 
-    await bot.delete_webhook()
+    print(
+        "=== ENCERRANDO APLICACAO — WEBHOOK MANTIDO ===",
+        flush=True,
+    )
+
     await bot.session.close()
 
 
@@ -51,10 +77,16 @@ async def health() -> dict:
 
 @app.post(TELEGRAM_WEBHOOK_PATH)
 async def telegram_webhook(request: Request):
-    secret = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
+    secret = request.headers.get(
+        "X-Telegram-Bot-API-Secret-Token"
+    )
 
     if settings.telegram_webhook_secret:
         if secret != settings.telegram_webhook_secret:
+            print(
+                "=== WEBHOOK TELEGRAM: SECRET INVALIDO ===",
+                flush=True,
+            )
             return {"status": "ignored"}
 
     data = await request.json()
