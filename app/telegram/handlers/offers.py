@@ -15,8 +15,14 @@ import uuid
 router = Router()
 
 
+
+
 @router.callback_query(F.data.startswith("offer:"))
+
+
 async def select_offer(callback: CallbackQuery) -> None:
+    print("=== CALLBACK OFFER RECEBIDO ===", flush=True)
+
     if callback.data is None:
         return
 
@@ -74,6 +80,11 @@ async def select_offer(callback: CallbackQuery) -> None:
         )
 
         existing_order = pending_result.scalars().first()
+
+        print(
+            f"=== PEDIDO PENDENTE: {existing_order.id if existing_order else 'NENHUM'} ===",
+            flush=True,
+        )
 
         if existing_order is not None:
             await callback.answer("Você já tem um pagamento pendente.")
