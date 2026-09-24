@@ -35,7 +35,10 @@ async def create_pix(
             json=payload,
         )
 
-    response.raise_for_status()
+    if response.is_error:
+        raise RuntimeError(
+            f"ePague HTTP {response.status_code}: {response.text}"
+        )
 
     data = response.json()
 
